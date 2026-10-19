@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Datos de ATVs Clásicos & Manuales Técnicos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#e63946',
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            accent: '#38bdf8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f17;
+            color: #f8fafc;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Navbar / Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-red-600/20 border border-red-500/30 rounded-xl text-red-500">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="6" cy="18" r="3" stroke-width="2"/>
+                        <circle cx="18" cy="18" r="3" stroke-width="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 15l2-6h5l3 3h4v3"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9V6h3"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                        ATV Clásicos <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">Manuales</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Base de Datos Técnica y Guía de Usuario para Quads de Época</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-6 text-xs text-slate-400 bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-700/50">
+                <div>
+                    <span class="block text-slate-200 font-bold text-sm" id="statTotal">0</span>
+                    <span>Modelos</span>
+                </div>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <div>
+                    <span class="block text-slate-200 font-bold text-sm">2-Tiempos / 4-Tiempos</span>
+                    <span>Categorías</span>
+                </div>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <div>
+                    <span class="block text-emerald-400 font-bold text-sm">100% Gratis</span>
+                    <span>Acceso Manuales</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- Search & Filter Controls -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 mb-8 shadow-xl">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Búsqueda rápida -->
+                <div class="relative sm:col-span-2">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text" id="searchInput" onkeyup="filterATVs()" placeholder="Buscar por modelo (ej. Banshee, TRX250R, QuadZilla)..." 
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
+                </div>
+
+                <!-- Filtro de Marca -->
+                <div>
+                    <select id="brandFilter" onchange="filterATVs()" 
+                        class="w-full py-3 px-4 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer">
+                        <option value="all">Todas las Marcas</option>
+                        <option value="Honda">Honda</option>
+                        <option value="Yamaha">Yamaha</option>
+                        <option value="Suzuki">Suzuki</option>
+                        <option value="Kawasaki">Kawasaki</option>
+                    </select>
+                </div>
+
+                <!-- Filtro por Tipo de Motor -->
+                <div>
+                    <select id="engineFilter" onchange="filterATVs()" 
+                        class="w-full py-3 px-4 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer">
+                        <option value="all">Todos los Motores</option>
+                        <option value="2-Tiempos">2-Tiempos (2T)</option>
+                        <option value="4-Tiempos">4-Tiempos (4T)</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Grid de ATV Cards -->
+        <div id="atvGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards generadas dinámicamente -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="noResults" class="hidden text-center py-16">
+            <div class="inline-flex p-4 rounded-full bg-slate-800/80 text-slate-400 mb-4">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-white">No se encontraron modelos</h3>
+            <p class="text-sm text-slate-400 mt-1">Prueba ajustando los filtros o el término de búsqueda.</p>
+        </div>
+
+    </main>
+
+    <!-- Modal del Manual Técnico y Usuario -->
+    <div id="manualModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden my-8 transform transition-all relative flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header / Imagen Hero Banner -->
+            <div class="relative h-64 sm:h-72 w-full bg-slate-800 overflow-hidden flex-shrink-0">
+                <img id="modalBannerImage" src="" alt="ATV Banner" class="w-full h-full object-cover object-center transition-opacity duration-300">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                
+                <!-- Botón de Cerrar -->
+                <button onclick="closeModal()" class="absolute top-4 right-4 p-2 bg-slate-900/80 hover:bg-red-600 text-slate-300 hover:text-white rounded-full backdrop-blur transition-all border border-slate-700/50">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+
+                <!-- Título e Información -->
+                <div class="absolute bottom-4 left-6 right-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span id="modalBrandBadge" class="text-xs font-bold px-2.5 py-1 rounded-md bg-red-600 text-white uppercase tracking-wider"></span>
+                        <span id="modalYearBadge" class="text-xs font-medium px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700"></span>
+                    </div>
+                    <h2 id="modalTitle" class="text-2xl sm:text-3xl font-black text-white tracking-tight"></h2>
+                </div>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-grow">
+                
+                <!-- Ficha Rápida -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-slate-800/60 rounded-xl border border-slate-700/50 text-xs">
+                    <div>
+                        <span class="block text-slate-400">Motor</span>
+                        <span id="modalSpecEngine" class="font-semibold text-slate-200 text-sm"></span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400">Transmisión</span>
+                        <span id="modalSpecTrans" class="font-semibold text-slate-200 text-sm"></span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <span class="block text-slate-400">Tipo de Tracción</span>
+                        <span id="modalSpecDrive" class="font-semibold text-slate-200 text-sm">4x2 Eje Rígido</span>
+                    </div>
+                </div>
+
+                <!-- Sección: Mantenimiento -->
+                <div class="bg-slate-800/40 p-5 rounded-xl border border-slate-800">
+                    <h3 class="text-base font-bold text-emerald-400 flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Manual de Mantenimiento Periódico
+                    </h3>
+                    <ul id="modalMaintenanceList" class="space-y-2 text-sm text-slate-300 list-disc list-inside"></ul>
+                </div>
+
+                <!-- Sección: Diagnóstico -->
+                <div class="bg-slate-800/40 p-5 rounded-xl border border-slate-800">
+                    <h3 class="text-base font-bold text-amber-400 flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Diagnóstico & Puntos Críticos
+                    </h3>
+                    <ul id="modalIssuesList" class="space-y-2 text-sm text-slate-300 list-disc list-inside"></ul>
+                </div>
+
+                <!-- Sección: Seguridad -->
+                <div class="bg-red-950/30 border border-red-900/40 p-5 rounded-xl">
+                    <h3 class="text-base font-bold text-red-400 flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        Seguridad del Operador
+                    </h3>
+                    <p id="modalSafetyText" class="text-sm text-slate-300 leading-relaxed"></p>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-900 border-t border-slate-800 flex justify-end">
+                <button onclick="closeModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm rounded-xl transition-all">
+                    Cerrar Manual
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-900/50 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            Base de Datos de ATV Clásicos &copy; 2026. Guía informativa de mantenimiento y especificaciones técnicas.
+        </div>
+    </footer>
+
+    <!-- JavaScript Data and Logic -->
+    <script>
+        // Fallback SVG Ilustrativo
+        function getSvgFallback(title, colorHex="#e63946") {
+            const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+                <rect width="100%" height="100%" fill="#1e293b"/>
+                <circle cx="250" cy="270" r="65" fill="#0f172a" stroke="${colorHex}" stroke-width="8"/>
+                <circle cx="550" cy="270" r="65" fill="#0f172a" stroke="${colorHex}" stroke-width="8"/>
+                <path d="M 200 240 L 320 180 L 480 180 L 580 240 L 450 140 L 300 140 Z" fill="${colorHex}" opacity="0.85"/>
+                <path d="M 330 140 L 350 90 L 420 90" stroke="#f8fafc" stroke-width="6" fill="none" stroke-linecap="round"/>
+                <text x="400" y="360" font-family="sans-serif" font-size="28" font-weight="bold" fill="#f8fafc" text-anchor="middle">${title}</text>
+            </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+        }
+
+        // Base de Datos Ampliada con la foto del Banshee Azul en Base64
+        const atvData = [
+            {
+                id: 1,
+                marca: "Yamaha",
+                modelo: "Banshee 350",
+                año: "1987-2006",
+                tipoMotor: "2-Tiempos",
+                motor: "347cc Bicilíndrico en Línea 2-Tiempos",
+                transmision: "Manual 6 velocidades",
+                imagen: "input_file_0.png",
+                manual: {
+                    mantenimiento: [
+                        "Mezcla de combustible: 32:1 o 40:1 con aceite sintético para 2T de alta gama.",
+                        "Presión de neumáticos: 4.0 PSI (Delante/Atrás) para dunas o terreno suelto.",
+                        "Calibración de bujías: NGK BR8ES a 0.6 - 0.7 mm.",
+                        "Aceite de transmisión: 1.5 Litros 10W-30 (Sin aditivos de fricción/JASO MA)."
+                    ],
+                    problemasComunes: [
+                        "Desincronización de los carburadores dobles Mikuni (requiere sincronizador de vacío).",
+                        "Sobrecalentamiento al andar lento por falta de ventilador radiador de fábrica.",
+                        "Fugas en el sello del piñón de ataque del eje primario."
+                    ],
+                    seguridad: "Entrega de potencia explosiva al entrar en la banda de RPM altas. Extremar precaución en curvas rápidas."
+                }
+            },
+            {
+                id: 2,
+                marca: "Honda",
+                modelo: "TRX250R",
+                año: "1986-1989",
+                tipoMotor: "2-Tiempos",
+                motor: "246cc Monocilíndrico 2T Enfriado por Líquido",
+                transmision: "Manual 6 velocidades",
+                imagen: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1000&q=80",
+                manual: {
+                    mantenimiento: [
+                        "Mezcla recomendada: 32:1 Gasolina 93+ octanos con aceite 2T de competición.",
+                        "Presión de neumáticos: 3.5 a 4.0 PSI.",
+                        "Bujía especificada: NGK BR9EIX (Iridio) para mejor respuesta.",
+                        "Aceite de caja: 0.75 Litros (Pro Honda GN4 10W-40)."
+                    ],
+                    problemasComunes: [
+                        "Fisuras en el chasis de acero tubular cerca del anclaje del amortiguador trasero.",
+                        "Desgaste prematuro del rodamiento de la bocina del eje trasero.",
+                        "Pérdida de compresión por desgaste de anillos en el pistón."
+                    ],
+                    seguridad: "Uno de los quads con mejor geometría de manejo de la historia. Usar siempre casco integral y botas de motocross."
+                }
+            },
+            {
+                id: 3,
+                marca: "Suzuki",
+                modelo: "LT500R QuadRacer (QuadZilla)",
+                año: "1987-1990",
+                tipoMotor: "2-Tiempos",
+                motor: "499cc Monocilíndrico 2T Enfriado por Agua",
+                transmision: "Manual 5 velocidades",
+                imagen: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80",
+                manual: {
+                    mantenimiento: [
+                        "Proporción de mezcla: 32:1 estrictamente con combustible de alto octanaje.",
+                        "Presión de aire: 4.0 PSI.",
+                        "Bujía: NGK B9EG o BR9ES.",
+                        "Volumen de lubricante de caja: 850 ml (10W-40)."
+                    ],
+                    problemasComunes: [
+                        "Los pernos prisioneros del cilindro pueden estirarse o barrerse debido al torque del motor.",
+                        "Vibraciones extremas aflojan la tornillería del chasis constantemente.",
+                        "Fatiga del pedal de arranque (kickstart)."
+                    ],
+                    seguridad: "Considerado el ATV de producción más rápido de su época. Exige máxima experiencia física y técnica."
+                }
+            },
+            {
+                id: 4,
+                marca: "Honda",
+                modelo: "ATC250R (3 Ruedas)",
+                año: "1985-1986",
+                tipoMotor: "2-Tiempos",
+                motor: "246cc Monocilíndrico 2T Líquido",
+                transmision: "Manual 6 velocidades",
+                imagen: "https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=1000&q=80",
+                manual: {
+                    mantenimiento: [
+                        "Mezcla de combustible: 32:1.",
+                        "Presión de neumáticos: 4.5 PSI (Uso de llantas de baja presión es crítico).",
+                        "Bujía recomendada: NGK BR9EG.",
+                        "Aceite de transmisión: 0.8 L (10W-40)."
+                    ],
+                    problemasComunes: [
+                        "Desgaste de retentores de las barras telescópicas delanteras.",
+                        "Pérdida de tensión en la cadena debido a la geometría del basculante."
+                    ],
+                    seguridad: "Vehículo de tres ruedas (Trike). Requiere desplazar el peso corporal activamente al girar para evitar volcaduras."
+                }
+            },
+            {
+                id: 5,
+                marca: "Kawasaki",
+                modelo: "Tecate-4 (KXF250)",
+                año: "1987-1988",
+                tipoMotor: "2-Tiempos",
+                motor: "249cc Monocilíndrico 2T con Válvula KIPS",
+                transmision: "Manual 6 velocidades",
+                imagen: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1000&q=80",
+                manual: {
+                    mantenimiento: [
+                        "Mezcla: 32:1 Gasolina de 95 octanos.",
+                        "Presión de neumáticos: 4.0 PSI.",
+                        "Bujía: NGK B9ES.",
+                        "Refrigerante: Reemplazar cada temporada (50/50 etilenglicol)."
+                    ],
+                    problemasComunes: [
+                        "Acumulación de carbón en la válvula de escape KIPS.",
+                        "Extrema escasez de repuestos plásticos y carrocería original."
+                    ],
+                    seguridad: "Acelerador tipo gatillo muy sensible con entrega instantánea de torque."
+                }
+            },
+            {
+                id: 6,
+                marca: "Yamaha",
+                modelo: "Blaster 200",
+                año: "1988-2006",
+                tipoMotor: "2-Tiempos",
+                motor: "195cc Monocilíndrico 2T Enfriado por Aire",
+                transmision: "Manual 6 velocidades",
+                imagen: "https://images.unsplash.com/photo-1547838218-307a220261f3?auto=format&fit=crop&w=1000&q=80",
+                manual: {
+                    mantenimiento: [
+                        "Mezcla: Autolube de fábrica o conversión a premix 32:1.",
+                        "Presión neumáticos: 4.0 PSI.",
+                        "Bujía: NGK B8ES.",
+                        "Aceite caja: 650 ml 10W-30."
+                    ],
+                    problemasComunes: [
+                        "Fallas en la bomba de inyección de aceite Autolube en modelos antiguos (se recomienda anular e ir a premix).",
+                        "Frenos mecánicos de tambor deficientes en modelos pré-2003."
+                    ],
+                    seguridad: "Chasis liviano y ágil, excelente para iniciación en quads deportivos de cambios manuales."
+                }
+            },
+            {
+                id: 7,
+                marca: "Honda",
+                modelo: "TRX400EX FourTrax",
+                año: "1999-2008",
+                tipoMotor: "4-Tiempos",
+                motor: "397cc Monocilíndrico 4T Enfriado por Aire/Aceite (RFVC)",
+                transmision: "Manual 5 velocidades",
+                imagen: "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&w=1000&q=80",
+                manual: {
+                    mantenimiento: [
+                        "Aceite de motor: 1.8 Litros SAE 10W-40 API SG/SJ.",
+                        "Ajuste de holgura de válvulas: Admisión 0.10 mm / Escape 0.12 mm.",
+                        "Presión neumáticos: 4.0 PSI.",
+                        "Bujía: NGK DPR8EA-9."
+                    ],
+                    problemasComunes: [
+                        "Desgaste de la cadena de tiempo si no se cambia el aceite con regularidad.",
+                        "Embrague se fatiga al usar aceites sintéticos de auto con fricción modificada."
+                    ],
+                    seguridad: "Motor de 4 tiempos muy dócil y confiable con gran torque a bajas revoluciones."
+                }
+            },
+            {
+                id: 8,
+                marca: "Yamaha",
+                modelo: "Raptor 660R",
+                año: "2001-2005",
+                tipoMotor: "4-Tiempos",
+                motor: "660cc Monocilíndrico 5 Válvulas 4T",
+                transmision: "Manual 5 velocidades con Marcha Atrás",
+                imagen: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1000&q=80",
+                manual: {
+                    mantenimiento: [
+                        "Capacidad de aceite: 2.1 L con cambio de filtro (Cárter Seco).",
+                        "Presión de neumáticos: 4.5 PSI.",
+                        "Bujía: NGK DPR8EA-9.",
+                        "Calibración de carbohidratos dobles Mikuni."
+                    ],
+                    problemasComunes: [
+                        "Falla del engranaje de la 2da marcha en modelos 2001.",
+                        "Embrague unidireccional del motor de arranque (One-way starter clutch)."
+                    ],
+                    seguridad: "Centro de gravedad elevado en relación con la potencia. Mantener cuerpo firme en curvas."
+                }
+            }
+        ];
+
+        // Función para renderizar las tarjetas
+        function displayATVs(items) {
+            const grid = document.getElementById('atvGrid');
+            const noResults = document.getElementById('noResults');
+            grid.innerHTML = '';
+
+            if (items.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            items.forEach(atv => {
+                const is2T = atv.tipoMotor.includes("2-Tiempos");
+                const badgeColor = is2T ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-sky-500/20 text-sky-400 border-sky-500/30";
+                const fallbackImg = getSvgFallback(`${atv.marca} ${atv.modelo}`);
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all duration-300 flex flex-col justify-between group hover:shadow-2xl hover:shadow-red-900/10";
+                
+                card.innerHTML = `
+                    <div>
+                        <!-- Thumbnail Image -->
+                        <div class="relative h-48 w-full bg-slate-800 overflow-hidden">
+                            <img src="${atv.imagen}" alt="${atv.marca} ${atv.modelo}" 
+                                class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                                onerror="this.onerror=null; this.src='${fallbackImg}';">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                            
+                            <span class="absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-md bg-slate-950/80 text-slate-200 backdrop-blur border border-slate-700">
+                                ${atv.año}
+                            </span>
+                            <span class="absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-md border backdrop-blur ${badgeColor}">
+                                ${atv.tipoMotor}
+                            </span>
+                        </div>
+
+                        <!-- Info Content -->
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-red-500 uppercase tracking-widest">${atv.marca}</span>
+                            <h3 class="text-xl font-bold text-white mb-3 group-hover:text-red-400 transition-colors">${atv.modelo}</h3>
+                            
+                            <div class="space-y-1.5 text-xs text-slate-400 mb-4">
+                                <p class="flex items-center gap-2">
+                                    <span class="text-slate-500">Motor:</span> 
+                                    <strong class="text-slate-300 font-medium">${atv.motor}</strong>
+                                </p>
+                                <p class="flex items-center gap-2">
+                                    <span class="text-slate-500">Caja:</span> 
+                                    <strong class="text-slate-300 font-medium">${atv.transmision}</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="px-5 pb-5">
+                        <button onclick="openManual(${atv.id})" 
+                            class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-500 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            Consultar Manual
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById('statTotal').innerText = items.length;
+        }
+
+        // Filtrado por barra de búsqueda y dropdowns
+        function filterATVs() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const brandValue = document.getElementById('brandFilter').value;
+            const engineValue = document.getElementById('engineFilter').value;
+
+            const filtered = atvData.filter(atv => {
+                const matchesSearch = (atv.marca + ' ' + atv.modelo).toLowerCase().includes(searchValue);
+                const matchesBrand = brandValue === 'all' || atv.marca === brandValue;
+                const matchesEngine = engineValue === 'all' || atv.tipoMotor.includes(engineValue);
+                
+                return matchesSearch && matchesBrand && matchesEngine;
+            });
+
+            displayATVs(filtered);
+        }
+
+        // Abrir Modal de Manual Técnico
+        function openManual(id) {
+            const atv = atvData.find(item => item.id === id);
+            if (!atv) return;
+
+            const fallbackImg = getSvgFallback(`${atv.marca} ${atv.modelo}`);
+            const bannerImg = document.getElementById('modalBannerImage');
+            
+            bannerImg.src = atv.imagen;
+            bannerImg.onerror = function() {
+                this.onerror = null;
+                this.src = fallbackImg;
+            };
+
+            document.getElementById('modalTitle').innerText = `${atv.marca} ${atv.modelo}`;
+            document.getElementById('modalBrandBadge').innerText = atv.marca;
+            document.getElementById('modalYearBadge').innerText = `Años: ${atv.año}`;
+            
+            document.getElementById('modalSpecEngine').innerText = atv.motor;
+            document.getElementById('modalSpecTrans').innerText = atv.transmision;
+
+            // Render Lista Mantenimiento
+            const maintList = document.getElementById('modalMaintenanceList');
+            maintList.innerHTML = atv.manual.mantenimiento.map(item => `<li>${item}</li>`).join('');
+
+            // Render Lista Fallas
+            const issuesList = document.getElementById('modalIssuesList');
+            issuesList.innerHTML = atv.manual.problemasComunes.map(item => `<li>${item}</li>`).join('');
+
+            // Texto Seguridad
+            document.getElementById('modalSafetyText').innerText = atv.manual.seguridad;
+
+            // Mostrar Modal
+            const modal = document.getElementById('manualModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Cerrar Modal
+        function closeModal() {
+            const modal = document.getElementById('manualModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Event Listeners para cerrar modal
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        document.getElementById('manualModal').addEventListener('click', (e) => {
+            if (e.target.id === 'manualModal') closeModal();
+        });
+
+        // Inicializar la aplicación
+        displayATVs(atvData);
+    </script>
+</body>
+</html>
